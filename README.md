@@ -44,7 +44,6 @@
    ```bash
    mvn spring-boot:run
 
-
 ## API 仕様書
 
 | メソッド | パス                    | 内容          |
