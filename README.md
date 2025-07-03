@@ -60,10 +60,27 @@
 src/
 ├── main/
 │   ├── java/com/example/healthapp/
+│   │   ├── constant
 │   │   ├── controller/
-│   │   ├── model/
+│   │   ├── entity/
 │   │   ├── repository/
 │   │   ├── service/
 │   │   └── security/
 │   └── resources/
 │       └── application.properties
+```
+
+
+## JWT認証の流れ
+
+```text
+[Client] → POST /api/users/login (email, password)
+     ↓
+[Spring Security] → AuthenticationManager.authenticate(...)
+     ↓
+[UserDetailsServiceImpl] → DBからUser情報取得
+     ↓
+[PasswordEncoder] でパスワード照合
+     ↓
+成功 → JwtUtil でトークン生成 → クライアントへ返却
+```
