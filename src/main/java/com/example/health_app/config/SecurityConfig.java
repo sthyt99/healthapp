@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,6 +20,7 @@ import com.example.health_app.security.UserDetailsServiceImpl;
  * パスワードエンコーダの定義などを行うクラス
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtFilter;
@@ -50,7 +52,7 @@ public class SecurityConfig {
 	@Bean
 	public AuthenticationManager authenticationManager(
 			AuthenticationConfiguration config) throws Exception {
-		
+
 		return config.getAuthenticationManager();
 	}
 
@@ -59,7 +61,7 @@ public class SecurityConfig {
 	 */
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		
+
 		return new BCryptPasswordEncoder();
 	}
 }

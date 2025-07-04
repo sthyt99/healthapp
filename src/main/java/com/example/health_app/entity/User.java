@@ -9,6 +9,8 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -59,13 +61,10 @@ public class User {
 	 */
 	private String gender;
 
-	/**
-	 * 権限
-	 */
-	@Column(name = "role")
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-	private Set<String> roles = new HashSet<>();
+	@Enumerated(EnumType.STRING)
+	private Set<Role> roles = new HashSet<>();
 
 	/**
 	 * 健康記録
@@ -126,11 +125,11 @@ public class User {
 		this.gender = gender;
 	}
 
-	public Set<String> getRoles() {
+	public Set<Role> getRoles() {
 		return roles;
 	}
 
-	public void setRoles(Set<String> roles) {
+	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
 	}
 
