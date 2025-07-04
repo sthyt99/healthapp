@@ -1,11 +1,13 @@
 package com.example.health_app.service;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.health_app.constant.AppMessage;
+import com.example.health_app.entity.Role;
 import com.example.health_app.entity.User;
 import com.example.health_app.repository.UserRepository;
 
@@ -44,6 +46,13 @@ public class UserService {
 
 		// ハッシュ化したパスワードを設定する
 		user.setPassword(encodedPassword);
+
+		// ロールが存在しない場合
+		if (user.getRoles() == null || user.getRoles().isEmpty()) {
+
+			// デフォルトロールを付与
+			user.setRoles(Set.of(Role.ROLE_USER));
+		}
 
 		return userRepository.save(user);
 	}
