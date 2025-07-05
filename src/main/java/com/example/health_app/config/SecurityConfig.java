@@ -38,7 +38,7 @@ public class SecurityConfig {
 				.csrf(csrf -> csrf.disable()) // CSRF無効化
 				.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // セッション未使用
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/api/users/login", "/api/users/register").permitAll() // 認証不要
+						.requestMatchers("/api/auth/login", "/api/users/register").permitAll() // 認証不要
 						.anyRequest().authenticated() // それ以外は認証必須
 				)
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // ユーザー名、パスワード認証前にJWT確認
