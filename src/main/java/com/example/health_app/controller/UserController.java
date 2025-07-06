@@ -1,5 +1,6 @@
 package com.example.health_app.controller;
 
+import java.security.Principal;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -61,6 +62,27 @@ public class UserController {
 			// "ユーザーが見つかりません"
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AppMessage.USER_NOT_FOUND);
 		}
+	}
+
+	/**
+	 * ログイン中ユーザー名取得
+	 */
+	@GetMapping("/me")
+	public ResponseEntity<?> getMyInfo(Principal principal) {
+
+		try {
+
+			// ログイン中のユーザー名を取得する
+			User user = userService.findByUsernameOrThrow(principal.getName());
+
+			return ResponseEntity.ok(user);
+
+		} catch (EntityNotFoundException e) {
+
+			// "ユーザーが見つかりません"
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AppMessage.USER_NOT_FOUND);
+		}
+
 	}
 
 	/**
