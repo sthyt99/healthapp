@@ -19,4 +19,5 @@ public class AppMessage {
 	public static final String USER_NOT_FOUND = "ユーザーが見つかりません";
 	public static final String RECORD_NOT_FOUND = "記録が存在しません";
 	public static final String AUTH_FAILED = "認証に失敗しました";
+	public static final String PASSWORD_TOO_SHORT = "新しいパスワードは%d文字以上である必要があります。";
 }
