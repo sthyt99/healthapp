@@ -2,6 +2,8 @@ package com.example.health_app.controller;
 
 import java.security.Principal;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.health_app.constant.AppConstraints;
 import com.example.health_app.constant.AppKeys;
 import com.example.health_app.constant.AppMessage;
+import com.example.health_app.dto.UserDto;
 import com.example.health_app.entity.User;
 import com.example.health_app.service.UserService;
 
@@ -43,11 +46,11 @@ public class UserController {
 
 		User saved = userService.registerUser(user);
 
-		return ResponseEntity.ok(saved);
+		return ResponseEntity.ok(toDto(saved));
 	}
 
 	/**
-	 * ユーザー情報取得
+	 * 指定ユーザー情報を取得（管理画面等）
 	 */
 	@GetMapping("/{username}")
 	public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
@@ -56,7 +59,7 @@ public class UserController {
 
 			User user = userService.findByUsernameOrThrow(username);
 
-			return ResponseEntity.ok(user);
+			return ResponseEntity.ok(toDto(user));
 
 			// ユーザー情報が存在しない場合
 		} catch (EntityNotFoundException e) {
@@ -67,17 +70,18 @@ public class UserController {
 	}
 
 	/**
-	 * ログイン中ユーザー名取得
+	 * ログイン中ユーザー情報取得
 	 */
 	@GetMapping("/me")
 	public ResponseEntity<?> getMyInfo(Principal principal) {
 
 		try {
 
-			// ログイン中のユーザー名を取得する
+			// ログイン中のユーザー情報を取得する
 			User user = userService.findByUsernameOrThrow(principal.getName());
 
-			return ResponseEntity.ok(user);
+			// DTO化
+			return ResponseEntity.ok(toDto(user));
 
 		} catch (EntityNotFoundException e) {
 
@@ -137,5 +141,22 @@ public class UserController {
 
 		// "パスワードを変更しました"
 		return ResponseEntity.ok(AppMessage.USER_CHANGE_PASSWORD);
+	}
+
+	/**
+	 * UserDtoに変換
+	 */
+	private UserDto toDto(User user) {
+		Set<String> roles = user.getRoles().stream()
+				.map(Enum::name)
+				.collect(Collectors.toSet());
+
+		return new UserDto(
+				user.getId(),
+				user.getUsername(),
+				user.getEmail(),
+				user.getAge(),
+				user.getGender(),
+				roles);
 	}
 }
