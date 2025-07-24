@@ -50,9 +50,8 @@ public class SecurityConfig {
 	 * 認証マネージャーを取得する
 	 */
 	@Bean
-	public AuthenticationManager authenticationManager(
-			AuthenticationConfiguration config) throws Exception {
-
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+		
 		return config.getAuthenticationManager();
 	}
 
