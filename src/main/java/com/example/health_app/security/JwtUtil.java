@@ -6,6 +6,7 @@ import java.util.Date;
 import org.springframework.stereotype.Component;
 
 import com.example.health_app.constant.SecurityConstants;
+import com.example.health_app.entity.Role;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -25,11 +26,12 @@ public class JwtUtil {
 	/**
 	 * JWTを発行する(トークンを生成)
 	 */
-	public String generateToken(String username) {
+	public String generateToken(String username, Role role) {
 
 		// ユーザー名、発行日時、有効期限、署名をJWT文字列に変換し、返却する
 		return Jwts.builder()
 				.setSubject(username) // トークンの対象（ユーザー名)
+				.claim("role", role.name()) // ロール
 				.setIssuedAt(new Date()) // 発行時刻
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_MS)) // 24時間有効
 				.signWith(secretKey, SignatureAlgorithm.HS256) // 署名
