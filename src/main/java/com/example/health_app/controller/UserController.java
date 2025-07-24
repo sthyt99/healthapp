@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import com.example.health_app.constant.AppKeys;
 import com.example.health_app.constant.AppMessage;
 import com.example.health_app.dto.UserDto;
 import com.example.health_app.entity.User;
+import com.example.health_app.security.CustomUserDetails;
 import com.example.health_app.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -73,12 +75,12 @@ public class UserController {
 	 * ログイン中ユーザー情報取得
 	 */
 	@GetMapping("/me")
-	public ResponseEntity<?> getMyInfo(Principal principal) {
+	public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
 		try {
 
 			// ログイン中のユーザー情報を取得する
-			User user = userService.findByUsernameOrThrow(principal.getName());
+			User user = userService.findByUsernameOrThrow(userDetails.getUsername());
 
 			// DTO化
 			return ResponseEntity.ok(toDto(user));
@@ -88,7 +90,6 @@ public class UserController {
 			// "ユーザーが見つかりません"
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AppMessage.USER_NOT_FOUND);
 		}
-
 	}
 
 	/**

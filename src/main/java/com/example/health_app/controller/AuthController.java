@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.health_app.constant.AppKeys;
 import com.example.health_app.constant.AppMessage;
+import com.example.health_app.entity.Role;
 import com.example.health_app.entity.User;
 import com.example.health_app.security.JwtUtil;
 import com.example.health_app.service.UserService;
@@ -37,22 +38,24 @@ public class AuthController {
 	}
 
 	/**
-	 * メールアドレスとパスワードでユーザーを認証し、JWTトークンを返却する
+	 * ユーザー名とパスワードでユーザーを認証し、JWTトークンを返却する
 	 */
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
 
 		try {
 
-			String email = body.get(AppKeys.EMAIL);
+			String username = body.get(AppKeys.USERNAME);
 			String password = body.get(AppKeys.PASSWORD);
 
-			// メールアドレスとパスワードで認証処理
+			// ユーザー名とパスワードで認証処理
 			authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(email, password));
+					new UsernamePasswordAuthenticationToken(username, password));
 
-			User user = userService.findByEmail(email).orElseThrow();
-			String token = jwtUtil.generateToken(user.getUsername());
+			User user = userService.findByUsernameOrThrow(username);
+			
+			Role role = user.getRoles().stream().findFirst().orElse(Role.ROLE_USER);
+			String token = jwtUtil.generateToken(user.getUsername(), role);
 
 			Map<String, String> response = new HashMap<>();
 
