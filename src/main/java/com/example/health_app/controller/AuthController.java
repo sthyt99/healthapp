@@ -1,6 +1,5 @@
 package com.example.health_app.controller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.health_app.constant.AppKeys;
 import com.example.health_app.constant.AppMessage;
-import com.example.health_app.entity.Role;
+import com.example.health_app.dto.AuthResponseDto;
 import com.example.health_app.entity.User;
 import com.example.health_app.security.JwtUtil;
 import com.example.health_app.service.UserService;
@@ -54,12 +53,10 @@ public class AuthController {
 
 			User user = userService.findByUsernameOrThrow(username);
 			
-			Role role = user.getRoles().stream().findFirst().orElse(Role.ROLE_USER);
-			String token = jwtUtil.generateToken(user.getUsername(), role);
+			String token = jwtUtil.generateToken(user.getUsername(), user.getRoles(), user.getRoleVersion());
 
-			Map<String, String> response = new HashMap<>();
-
-			response.put(AppKeys.JWT_TOKEN, token);
+			// DTOレスポンス
+	        AuthResponseDto response = new AuthResponseDto(token, user.getUsername(), user.getRoles());
 
 			return ResponseEntity.ok(response);
 

@@ -40,6 +40,10 @@ public class UserService {
 
 			throw new IllegalArgumentException(AppMessage.EMAIL_ALREADY_USED);
 		}
+		
+		if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+	        throw new IllegalArgumentException(AppMessage.USERNAME_ALREADY_USED);
+	    }
 
 		// パスワードをハッシュ化する
 		String encodedPassword = passwordEncoder.encode(user.getPassword());
@@ -53,6 +57,8 @@ public class UserService {
 			// デフォルトロールを付与
 			user.setRoles(Set.of(Role.ROLE_USER));
 		}
+		
+		user.setRoleVersion(1L);
 
 		return userRepository.save(user);
 	}
@@ -96,6 +102,8 @@ public class UserService {
 
 		// ハッシュ化したパスワードを設定する
 		user.setPassword(encoded);
+		
+		user.setRoleVersion(user.getRoleVersion() + 1);
 
 		userRepository.save(user);
 	}

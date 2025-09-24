@@ -16,8 +16,11 @@ public class AppMessage {
 
 	// エラーメッセージ
 	public static final String EMAIL_ALREADY_USED = "メールアドレスはすでに使用されています。";
+	public static final String USERNAME_ALREADY_USED = "ユーザー名はすでに使用されています。";
 	public static final String USER_NOT_FOUND = "ユーザーが見つかりません";
 	public static final String RECORD_NOT_FOUND = "記録が存在しません";
 	public static final String AUTH_FAILED = "認証に失敗しました";
 	public static final String PASSWORD_TOO_SHORT = "新しいパスワードは%d文字以上である必要があります。";
+	public static final String DELETE_NO_ROLE = "削除権限がありません";
+	public static final String AUTH_REQUIRED = "認証が必要です";
 }

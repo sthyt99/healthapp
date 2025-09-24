@@ -76,6 +76,12 @@ public class User {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<HealthRecord> records;
 
+	/**
+	 * ロール更新の世代（権限更新のたびにインクリメント）
+	 */
+	@Column(nullable = false)
+	private long roleVersion = 0L;
+
 	// コンストラクタ
 	public User() {
 	}
@@ -143,5 +149,13 @@ public class User {
 
 	public void setRecords(List<HealthRecord> records) {
 		this.records = records;
+	}
+
+	public long getRoleVersion() {
+		return roleVersion;
+	}
+
+	public void setRoleVersion(long roleVersion) {
+		this.roleVersion = roleVersion;
 	}
 }
