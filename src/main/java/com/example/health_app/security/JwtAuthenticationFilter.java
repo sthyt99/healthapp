@@ -1,8 +1,12 @@
 package com.example.health_app.security;
 
 import java.io.IOException;
+import java.util.Collection;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -21,6 +25,10 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+	
+	/** ロールバージョン無し */
+	private static final long RV_UNKNOWN = -1L;
+	private static final String RV_MISMATCH = "Role version mismatch";
 
 	private final JwtUtil jwtUtil;
 	private final UserDetailsServiceImpl userDetailsService;
@@ -34,39 +42,57 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
+		String uri = request.getRequestURI();
+		boolean adminPath = uri.startsWith("/api/admin"); // 管理系パス判定
 		String authHeader = request.getHeader(SecurityConstants.AUTH_HEADER);
-		String token = null;
-		String username = null;
 
 		// ヘッダーが存在するかつ、ヘッダーの接頭辞が"Bearer "の場合
 		if (authHeader != null && authHeader.startsWith(SecurityConstants.TOKEN_PREFIX)) {
 
-			token = authHeader.substring(SecurityConstants.TOKEN_PREFIX.length());
-			username = jwtUtil.extractUsername(token);
-		}
-
-		// 認証済み出ない場合
-		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-			// ユーザー名に該当するUserDetailsを取得する
-			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+			String token = authHeader.substring(SecurityConstants.TOKEN_PREFIX.length());
 
 			// トークン解析結果がtrueの場合
 			if (jwtUtil.validateToken(token)) {
 
-				// ユーザー情報を認証済みに変換する
-				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-						null, userDetails.getAuthorities());
+				String username = jwtUtil.extractUsername(token);
 
-				// リクエストの詳細情報を設定する
-				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				// ユーザー情報をロード（最低限の存在確認とDBロール参照用）
+				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-				// ユーザーが認証済みとして登録する
-				SecurityContextHolder.getContext().setAuthentication(authToken);
+				try {
+					Collection<? extends GrantedAuthority> authorities = resolveAuthorities(userDetails, token,
+							adminPath);
+
+					UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails,
+							null, authorities);
+					auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+					SecurityContextHolder.getContext().setAuthentication(auth);
+
+				} catch (AccessDeniedException ex) {
+					response.sendError(HttpServletResponse.SC_FORBIDDEN, ex.getMessage());
+					return;
+				}
 			}
 		}
 
 		// 次の処理へ進む
 		filterChain.doFilter(request, response);
 	}
+	
+	/**
+	 * 認証判定
+	 */
+	private Collection<? extends GrantedAuthority> resolveAuthorities(UserDetails userDetails, String token, boolean adminPath) {
+	    if (adminPath) {
+	        long jwtRv = jwtUtil.extractRoleVersion(token);
+	        long dbRv = (userDetails instanceof CustomUserDetails cud) ? cud.getUser().getRoleVersion() : RV_UNKNOWN;
+	        if (jwtRv != dbRv) throw new AccessDeniedException(RV_MISMATCH);
+	        return userDetails.getAuthorities();
+	    } else {
+	        return jwtUtil.extractRoles(token).stream()
+	                     .map(SimpleGrantedAuthority::new)
+	                     .toList();
+	    }
+	}
+
 }

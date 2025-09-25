@@ -1,6 +1,5 @@
 package com.example.health_app.controller;
 
-import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,7 +43,7 @@ public class UserController {
 	 * ユーザー作成
 	 */
 	@PostMapping("/register")
-	public ResponseEntity<?> registerUser(@RequestBody User user) {
+	public ResponseEntity<UserDto> registerUser(@RequestBody User user) {
 
 		User saved = userService.registerUser(user);
 
@@ -52,8 +51,9 @@ public class UserController {
 	}
 
 	/**
-	 * 指定ユーザー情報を取得（管理画面等）
+	 * 指定ユーザー情報（管理用）
 	 */
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/{username}")
 	public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
 
@@ -77,6 +77,10 @@ public class UserController {
 	@GetMapping("/me")
 	public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
+		if (userDetails == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AppMessage.AUTH_REQUIRED);
+		}
+
 		try {
 
 			// ログイン中のユーザー情報を取得する
@@ -96,27 +100,26 @@ public class UserController {
 	 * ユーザー用パスワード変更
 	 */
 	@PutMapping("/password")
-	public ResponseEntity<?> changePasswordBySelf(Principal principal, @RequestBody Map<String, String> body) {
+	public ResponseEntity<?> changePasswordBySelf(
+			@AuthenticationPrincipal CustomUserDetails userDetails,
+			@RequestBody Map<String, String> body) {
+		if (userDetails == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AppMessage.AUTH_REQUIRED);
+		}
 
-		// 入力新パスワード
 		String newPassword = body.get(AppKeys.NEW_PASSWORD);
-
-		// 新パスワードがないまたは、パスワードの文字数が6より小さい場合
 		if (newPassword == null || newPassword.length() < AppConstraints.PASSWORD_MIN_LENGTH) {
-
-			// "新しいパスワードは6文字以上である必要があります。"
 			return ResponseEntity.badRequest()
 					.body(String.format(AppMessage.PASSWORD_TOO_SHORT, AppConstraints.PASSWORD_MIN_LENGTH));
 		}
 
-		// ログイン済みユーザー情報を取得する
-		User user = userService.findByUsernameOrThrow(principal.getName());
-
-		// パスワード変更処理
-		userService.changePassword(user.getId(), newPassword);
-
-		// "パスワードを変更しました"
-		return ResponseEntity.ok(AppMessage.USER_CHANGE_PASSWORD);
+		try {
+			User me = userService.findByUsernameOrThrow(userDetails.getUsername());
+			userService.changePassword(me.getId(), newPassword);
+			return ResponseEntity.ok(AppMessage.USER_CHANGE_PASSWORD);
+		} catch (EntityNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(AppMessage.USER_NOT_FOUND);
+		}
 	}
 
 	/**
@@ -124,25 +127,18 @@ public class UserController {
 	 */
 	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/{id}/password")
-	public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
-
-		// 入力パスワードを取得する
-		String newPassword = body.get(AppKeys.NEW_PASSWORD);
-
-		// 新パスワードがないまたは、パスワードの文字数が6より小さい場合
-		if (newPassword == null || newPassword.length() < AppConstraints.PASSWORD_MIN_LENGTH) {
-
-			// "新しいパスワードは6文字以上である必要があります。"
-			return ResponseEntity.badRequest()
-					.body(String.format(AppMessage.PASSWORD_TOO_SHORT, AppConstraints.PASSWORD_MIN_LENGTH));
-		}
-
-		// パスワード変更処理
-		userService.changePassword(id, newPassword);
-
-		// "パスワードを変更しました"
-		return ResponseEntity.ok(AppMessage.USER_CHANGE_PASSWORD);
-	}
+	public ResponseEntity<?> changePasswordByAdmin(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body
+    ) {
+        String newPassword = body.get(AppKeys.NEW_PASSWORD);
+        if (newPassword == null || newPassword.length() < AppConstraints.PASSWORD_MIN_LENGTH) {
+            return ResponseEntity.badRequest()
+                    .body(String.format(AppMessage.PASSWORD_TOO_SHORT, AppConstraints.PASSWORD_MIN_LENGTH));
+        }
+        userService.changePassword(id, newPassword);
+        return ResponseEntity.ok(AppMessage.USER_CHANGE_PASSWORD);
+    }
 
 	/**
 	 * UserDtoに変換
