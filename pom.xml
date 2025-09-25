@@ -60,6 +60,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<exclusions>
+	            <!-- 古い JUnit4 (Vintage) を除外して JUnit5 に統一 -->
+	            <exclusion>
+	                <groupId>org.junit.vintage</groupId>
+	                <artifactId>junit-vintage-engine</artifactId>
+	            </exclusion>
+        	</exclusions>
 		</dependency>
 		
 		<dependency>
