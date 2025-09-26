@@ -1,5 +1,6 @@
 package com.example.health_app.controller;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -75,16 +76,16 @@ public class UserController {
 	 * ログイン中ユーザー情報取得
 	 */
 	@GetMapping("/me")
-	public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+	public ResponseEntity<?> getMyInfo(Principal principal) {
 
-		if (userDetails == null) {
+		if (principal == null) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AppMessage.AUTH_REQUIRED);
 		}
 
 		try {
 
 			// ログイン中のユーザー情報を取得する
-			User user = userService.findByUsernameOrThrow(userDetails.getUsername());
+			User user = userService.findByUsernameOrThrow(principal.getName());
 
 			// DTO化
 			return ResponseEntity.ok(toDto(user));
